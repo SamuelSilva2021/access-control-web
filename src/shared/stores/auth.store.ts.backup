@@ -1,0 +1,316 @@
+/**
+ * Store de autenticação com integração completa dos grupos de acesso
+ * 
+ * Funcionalidades:
+ * - Autenticação de usuários
+ * - Gerenciamento de tokens
+ * - Carregamento automático dos gr        load             loadAc        loadAcc             loadAcc             loadAccessGroups: async () => {
+          console.log('� Store: loadAccessGroups REMOVIDO - não é responsabilidade do auth store');
+          console.log('ℹ️ Store: Use o hook useAccessGroups na página específica para carregar dados');
+        },
+
+        refreshToken: async () => {
+          try {
+            // TODO: Implementar refresh token quando a API estiver pronta
+            console.log('Refresh token not implemented yet');
+          } catch (error) {
+            // Se falhar o refresh, faz logout
+            get().logout();
+            throw error;
+          }
+        },🚫 Store: loadAccessGroups REMOVIDO - não é responsabilidade do auth store');
+          console.log('ℹ️ Store: Use o hook useAccessGroups na página específica para carregar dados');
+        },
+
+        refreshToken: async () => {
+          try {
+            // TODO: Implementar refresh token quando a API estiver prontaasync () => {
+          console.log('� Store: loadAccessGroups REMOVIDO - não é responsabilidade do auth store');
+          console.log('ℹ️ Store: Use o hook useAccessGroups na página específica para carregar dados');
+        },
+
+        refreshToken: async () => {
+          try {
+            // TODO: Implementar refresh token quando a API estiver pronta
+            console.log('Refresh token not implemented yet');
+          } catch (error) {
+            // Se falhar o refresh, faz logout
+            get().logout();
+            throw error;
+          }
+        },🚫 Store: loadAccessGroups REMOVIDO - não é responsabilidade do auth store');
+          console.log('ℹ️ Store: Use o hook useAccessGroups na página específica para carregar dados');
+        },
+
+        refreshToken: async () => {
+          try {
+            // TODO: Implementar refresh token quando a API estiver prontaasync () => {
+          console.log('🚫 Store: loadAccessGroups REMOVIDO - não é responsabilidade do auth store');
+          console.log('ℹ️ Store: Use o hook useAccessGroups na página específica para carregar dados');
+        },
+
+        refreshToken: async () => {
+          try {
+            // TODO: Implementar refresh token quando a API estiver pronta
+            console.log('Refresh token not implemented yet');
+          } catch (error) {
+            // Se falhar o refresh, faz logout
+            get().logout();
+            throw error;
+          }
+        },) => {
+          console.log('🚫 Store: loadAccessGroups REMOVIDO - não é responsabilidade do auth store');
+          console.log('ℹ️ Store: Use o hook useAccessGroups na página específica para carregar dados');
+        },
+
+        refreshToken: async () => {
+          try {
+            // TODO: Implementar refresh token quando a API estiver pronta
+            console.log('Refresh token not implemented yet');
+          } catch (error) {
+            // Se falhar o refresh, faz logout
+            get().logout();
+            throw error;
+          }
+        },: async () => {
+          console.log('🚫 Store: loadAccessGroups REMOVIDO - não é responsabilidade do auth store');
+          console.log('ℹ️ Store: Use o hook useAccessGroups na página específica para carregar dados');
+        },
+
+        refreshToken: async () => {ps: async () => {
+          console.log('🚫 Store: loadAccessGroups REMOVIDO - não é responsabilidade do auth store');
+          console.log('ℹ️ Store: Use o hook useAccessGroups na página específica para carregar dados');
+        },
+
+        refreshToken: async () => {
+          try {
+            // TODO: Implementar refresh token quando a API estiver pronta
+            console.log('Refresh token not implemented yet');
+          } catch (error) {
+            // Se falhar o refresh, faz logout
+            get().logout();
+            throw error;
+          }
+        },oníveis
+ * - Helpers para verificação de permissões de grupos
+ * 
+ * @example
+ * ```tsx
+ * // Uso básico do store
+ * const { user, isAuthenticated, login, logout } = useAuthStore();
+ * 
+ * // Uso dos grupos de acesso
+ * const { 
+ *   userAccessGroups, 
+ *   hasAccessToGroup, 
+ *   availableAccessGroups 
+ * } = useAuthAccessGroups();
+ * 
+ * // Verificar se usuário tem acesso a um grupo específico
+ * if (hasAccessToGroup('admin-group-id')) {
+ *   // Mostrar funcionalidade administrativa
+ * }
+ * ```
+ */
+
+import { create } from 'zustand';
+import { devtools, persist } from 'zustand/middleware';
+import type { AuthState, AuthUser, LoginRequest, LoginResponseData } from '../types';
+import { httpClient } from '../utils';
+import { API_ENDPOINTS } from '../constants';
+import { setToken, setRefreshToken, setStoredUser, clearAuth, getToken, getStoredUser, isTokenValid } from '../utils/auth-storage';
+
+interface AuthStore extends AuthState {
+  // Actions
+  login: (credentials: LoginRequest) => Promise<void>;
+  logout: () => void;
+  setUser: (user: AuthUser | null) => void;
+  setToken: (token: string | null) => void;
+  setLoading: (loading: boolean) => void;
+  refreshToken: () => Promise<void>;
+  initialize: () => void;
+}
+
+export const useAuthStore = create<AuthStore>()(
+  devtools(
+    persist(
+      (set, get) => ({
+        isAuthenticated: false,
+        user: null,
+        token: null,
+        isLoading: false, // Inicia false para evitar loading infinito
+
+        initialize: async () => {
+          console.log('🔧 Store: initialize() chamado (versão corrigida)');
+          
+          try {
+            const token = getToken();
+            const user = getStoredUser();
+            
+            // Verificação de token válido antes de definir como autenticado
+            const isValidToken = token && user && isTokenValid();
+            
+            // Atualização de estado única e controlada
+            const authState = {
+              isAuthenticated: !!isValidToken,
+              user: isValidToken ? user : null,
+              token: isValidToken ? token : null,
+              isLoading: false,
+            };
+            
+            // Se o token expirou, limpa dados
+            if (token && user && !isValidToken) {
+              console.log('🔐 Store: Token expirado detectado na inicialização - limpando dados');
+              clearAuth();
+            }
+            
+            set(authState);
+            console.log('✅ Store: Estado inicial definido', { 
+              isAuthenticated: authState.isAuthenticated,
+              hasUser: !!authState.user,
+              tokenValid: !!isValidToken
+            });
+            
+            // NOVO: Listener para token expirado (SEM reload)
+            const handleTokenExpired = () => {
+              console.log('🔐 Store: Token expirado detectado - fazendo logout...');
+              get().logout();
+            };
+            
+            // Remove listener anterior se existir
+            window.removeEventListener('auth:token-expired', handleTokenExpired);
+            // Adiciona novo listener
+            window.addEventListener('auth:token-expired', handleTokenExpired);
+            
+            // Carregamento removido - não é responsabilidade do auth store
+            // A página de grupos de acesso deve carregar seus próprios dados
+            
+          } catch (error) {
+            console.error('❌ Store: Erro na inicialização:', error);
+            set({
+              isAuthenticated: false,
+              user: null,
+              token: null,
+              isLoading: false,
+            });
+          }
+        },
+
+        // Actions
+        login: async (credentials: LoginRequest) => {
+          try {
+            set({ isLoading: true });
+            
+            const response = await httpClient.post<LoginResponseData>(
+              API_ENDPOINTS.LOGIN,
+              credentials
+            );
+
+            console.log('Login response:', response);
+
+            if (response.succeeded && response.data) {
+              const { accessToken, refreshToken, user } = response.data;
+              
+              if (user) {
+                const authUser: AuthUser = {
+                  id: user.id,
+                  email: user.email,
+                  username: user.username,
+                  fullName: user.fullName,
+                  tenant: user.tenant,
+                  permissions: user.permissions,
+                  roles: user.roles,
+                  accessGroups: user.accessGroups,
+                };
+
+                // Atualiza storage
+                setToken(accessToken);
+                setRefreshToken(refreshToken);
+                setStoredUser(authUser);
+
+                // Atualiza store
+                set({
+                  isAuthenticated: true,
+                  user: authUser,
+                  token: accessToken,
+                  isLoading: false,
+                });
+
+                console.log('Login successful, user:', authUser); 
+                
+                // Removido: carregamento de grupos não é responsabilidade do auth store 
+              } else {
+                throw new Error('Informações do usuário não retornadas pela API');
+              }
+            } else {
+              throw new Error(response.errors?.join(', ') || 'Erro desconhecido no login');
+            }
+          } catch (error) {
+            console.error('Erro no login:', error); // Debug
+            set({ isLoading: false });
+            throw error;
+          }
+        },
+
+        logout: () => {
+          console.log('🚪 Store: Fazendo logout...');
+          
+          // Remove listener de token expirado
+          window.removeEventListener('auth:token-expired', () => {});
+          
+          clearAuth();
+          set({
+            isAuthenticated: false,
+            user: null,
+            token: null,
+            isLoading: false,
+          });
+          
+          console.log('✅ Store: Logout concluído');
+        },
+
+        setUser: (user: AuthUser | null) => {
+          set({ user });
+        },
+
+        setToken: (token: string | null) => {
+          set({ token, isAuthenticated: !!token });
+        },
+
+        setLoading: (isLoading: boolean) => {
+          set({ isLoading });
+        },
+
+        loadAccessGroups: async () => {
+          console.log('🚫 Store: loadAccessGroups REMOVIDO - não é responsabilidade do auth store');
+          console.log('� Store: Use o hook useAccessGroups na página específica para carregar dados');
+        },
+
+        setAvailableAccessGroups: (groups: AccessGroup[]) => {
+          set({ availableAccessGroups: groups });
+        },
+
+        refreshToken: async () => {
+          try {
+            // TODO: Implementar refresh token quando a API estiver pronta
+            console.log('Refresh token not implemented yet');
+          } catch (error) {
+            // Se falhar o refresh, faz logout
+            get().logout();
+            throw error;
+          }
+        },
+      }),
+      {
+        name: 'auth-storage',
+        // Persistência simples - apenas dados essenciais
+        partialize: (state: AuthStore) => ({ 
+          isAuthenticated: state.isAuthenticated,
+          user: state.user,
+          token: state.token,
+        }),
+      }
+    ),
+    { name: 'auth-store' }
+  )
+);
