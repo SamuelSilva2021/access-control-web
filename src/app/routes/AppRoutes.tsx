@@ -5,6 +5,7 @@ import { AccessGroupsPage } from '../../features/access-groups';
 import { GroupTypesTestPage, GroupTypesPage } from '../../features/groups';
 import { ModulesPage } from '../../features/modules';
 import { OperationsPage, OperationsTestPage } from '../../features/operations';
+import { PermissionsPage } from '../../features/permissions';
 import { ProtectedRoute } from './ProtectedRoute';
 import { MainLayout } from '../../shared/components';
 import { ROUTES } from '../../shared/constants';
@@ -97,6 +98,18 @@ export const AppRoutes = () => {
           <ProtectedRoute>
             <MainLayout>
               <OperationsTestPage />
+            </MainLayout>
+          </ProtectedRoute>
+        } 
+      />
+      
+      {/* Rotas de Permissões */}
+      <Route 
+        path={ROUTES.PERMISSIONS} 
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <PermissionsPage />
             </MainLayout>
           </ProtectedRoute>
         } 

@@ -100,19 +100,19 @@ export const Sidebar = ({ open, onClose, onToggle }: SidebarProps) => {
           path: '/operations',
         },
         {
+          id: 'permissions',
+          title: 'Permissões',
+          icon: <SecurityIcon />,
+          path: '/permissions',
+        },
+        {
           id: 'users',
           title: 'Usuários',
           icon: <PersonIcon />,
           path: '/users',
           badge: 'Em breve',
         },
-        {
-          id: 'permissions',
-          title: 'Permissões',
-          icon: <SecurityIcon />,
-          path: '/permissions',
-          badge: 'Em breve',
-        },
+
       ],
     },
     {
