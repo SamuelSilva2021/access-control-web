@@ -20,6 +20,7 @@ import {
   Person as PersonIcon,
   Settings as SettingsIcon,
   Dashboard as DashboardIcon,
+  PlayArrow as OperationIcon,
   ExpandLess,
   ExpandMore,
   ChevronLeft as ChevronLeftIcon,
@@ -85,6 +86,18 @@ export const Sidebar = ({ open, onClose, onToggle }: SidebarProps) => {
           title: 'Tipos de Grupo',
           icon: <GroupIcon />,
           path: '/group-types',
+        },
+        {
+          id: 'modules',
+          title: 'Módulos',
+          icon: <SecurityIcon />,
+          path: '/modules',
+        },
+        {
+          id: 'operations',
+          title: 'Operações',
+          icon: <OperationIcon />,
+          path: '/operations',
         },
         {
           id: 'users',

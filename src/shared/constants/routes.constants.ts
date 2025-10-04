@@ -6,6 +6,7 @@ export const ROUTES = {
   
   // Test/Debug
   GROUP_TYPES_TEST: '/group-types-test',
+  OPERATIONS_TEST: '/operations-test',
   
   // Users
   USERS: '/users',
@@ -42,6 +43,12 @@ export const ROUTES = {
   MODULE_CREATE: '/modules/create',
   MODULE_EDIT: (id: string) => `/modules/${id}/edit`,
   MODULE_DETAIL: (id: string) => `/modules/${id}`,
+  
+  // Operations
+  OPERATIONS: '/operations',
+  OPERATION_CREATE: '/operations/create',
+  OPERATION_EDIT: (id: string) => `/operations/${id}/edit`,
+  OPERATION_DETAIL: (id: string) => `/operations/${id}`,
   
   // Settings
   SETTINGS: '/settings',

@@ -3,6 +3,8 @@ import { LoginPage } from '../../features/auth';
 import { DashboardPage } from '../../features/dashboard';
 import { AccessGroupsPage } from '../../features/access-groups';
 import { GroupTypesTestPage, GroupTypesPage } from '../../features/groups';
+import { ModulesPage } from '../../features/modules';
+import { OperationsPage, OperationsTestPage } from '../../features/operations';
 import { ProtectedRoute } from './ProtectedRoute';
 import { MainLayout } from '../../shared/components';
 import { ROUTES } from '../../shared/constants';
@@ -64,7 +66,43 @@ export const AppRoutes = () => {
         } 
       />
       
-      {/* TODO: Adicionar rotas para group types, usuários, roles, etc. */}
+      {/* Rotas de Módulos */}
+      <Route 
+        path={ROUTES.MODULES} 
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <ModulesPage />
+            </MainLayout>
+          </ProtectedRoute>
+        } 
+      />
+      
+      {/* Rotas de Operações */}
+      <Route 
+        path={ROUTES.OPERATIONS} 
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <OperationsPage />
+            </MainLayout>
+          </ProtectedRoute>
+        } 
+      />
+      
+      {/* Rota de teste para Operations */}
+      <Route 
+        path={ROUTES.OPERATIONS_TEST} 
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <OperationsTestPage />
+            </MainLayout>
+          </ProtectedRoute>
+        } 
+      />
+      
+      {/* TODO: Adicionar rotas para usuários, roles, etc. */}
       
       {/* Rota de fallback - redireciona para dashboard */}
       <Route path="*" element={<Navigate to={ROUTES.DASHBOARD} replace />} />
