@@ -194,13 +194,28 @@ export class PermissionService {
   static async updatePermission(id: string, permission: UpdatePermissionRequest): Promise<Permission> {
     const response = await httpClient.put<PermissionApiResponse>(`${this.BASE_URL}/${id}`, permission);
     
-    console.log('🔍 Debug - Resposta da API (Update Permission):', response.data);
+    console.log('🔍 Debug - Resposta completa da API (Update Permission):', response);
+    console.log('🔍 Debug - Dados da resposta:', response.data);
     
-    if (!response.data.succeeded) {
-      throw new Error(`Erro na API: ${getErrorMessage(response.data.errors)}`);
+    // Verifica se temos dados na resposta
+    if (!response.data) {
+      throw new Error('Resposta da API inválida: sem dados');
     }
     
-    return response.data.data;
+    // Se a resposta tem a propriedade succeeded, usa a lógica ResponseDTO
+    if ('succeeded' in response.data) {
+      const apiData = response.data as PermissionApiResponse;
+      console.log('🔍 Debug - ResponseDTO detectado, succeeded:', apiData.succeeded);
+      
+      if (!apiData.succeeded) {
+        throw new Error(`Erro na API: ${getErrorMessage(apiData.errors)}`);
+      }
+      
+      return apiData.data;
+    }
+    
+    // Se não tem succeeded, assume que é a permissão direta
+    return response.data as Permission;
   }
 
   /**
@@ -211,8 +226,18 @@ export class PermissionService {
     
     console.log('🔍 Debug - Resposta da API (Delete Permission):', response.data);
     
-    if (!response.data.succeeded) {
-      throw new Error(`Erro na API: ${getErrorMessage(response.data.errors)}`);
+    // Verifica se temos dados na resposta
+    if (!response.data) {
+      throw new Error('Resposta da API inválida: sem dados');
+    }
+    
+    // Se a resposta tem a propriedade succeeded, usa a lógica ResponseDTO
+    if ('succeeded' in response.data) {
+      const apiData = response.data as PermissionApiResponse;
+      
+      if (!apiData.succeeded) {
+        throw new Error(`Erro na API: ${getErrorMessage(apiData.errors)}`);
+      }
     }
     
     return true;
@@ -224,10 +249,25 @@ export class PermissionService {
   static async togglePermissionStatus(id: string): Promise<Permission> {
     const response = await httpClient.patch<PermissionApiResponse>(`${this.BASE_URL}/${id}/toggle-status`);
     
-    if (!response.data.succeeded) {
-      throw new Error(`Erro na API: ${getErrorMessage(response.data.errors)}`);
+    console.log('🔍 Debug - Resposta da API (Toggle Permission):', response.data);
+    
+    // Verifica se temos dados na resposta
+    if (!response.data) {
+      throw new Error('Resposta da API inválida: sem dados');
     }
     
-    return response.data.data;
+    // Se a resposta tem a propriedade succeeded, usa a lógica ResponseDTO
+    if ('succeeded' in response.data) {
+      const apiData = response.data as PermissionApiResponse;
+      
+      if (!apiData.succeeded) {
+        throw new Error(`Erro na API: ${getErrorMessage(apiData.errors)}`);
+      }
+      
+      return apiData.data;
+    }
+    
+    // Se não tem succeeded, assume que é a permissão direta
+    return response.data as Permission;
   }
 }

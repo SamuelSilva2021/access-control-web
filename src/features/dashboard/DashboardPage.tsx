@@ -35,8 +35,15 @@ export const DashboardPage = () => {
       color: 'secondary',
     },
     {
+      title: 'Roles',
+      description: 'Gerenciar papéis e funções',
+      icon: SecurityIcon,
+      path: ROUTES.ROLES,
+      color: 'primary',
+    },
+    {
       title: 'Permissões',
-      description: 'Configurar permissões e roles',
+      description: 'Configurar permissões e operações',
       icon: SecurityIcon,
       path: ROUTES.PERMISSIONS,
       color: 'success',

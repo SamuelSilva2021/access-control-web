@@ -25,13 +25,13 @@ export interface UserAccount {
 }
 
 export interface CreateUserAccountRequest {
-  tenantId?: string;
-  username: string;
   email: string;
   password: string;
+  confirmPassword: string;
   firstName: string;
   lastName: string;
   phoneNumber?: string;
+  tenantId?: string; // Será preenchido automaticamente pelo contexto do usuário logado
 }
 
 export interface UpdateUserAccountRequest {
@@ -41,4 +41,17 @@ export interface UpdateUserAccountRequest {
   lastName?: string;
   phoneNumber?: string;
   status?: UserAccountStatus;
+}
+
+// Tipos para associação de grupos a usuários
+export interface AssignUserAccessGroupsRequest {
+  accessGroupIds: string[];
+}
+
+export interface UserAccessGroupsResponse {
+  id: string;
+  name: string;
+  description?: string;
+  groupType: string;
+  isActive: boolean;
 }

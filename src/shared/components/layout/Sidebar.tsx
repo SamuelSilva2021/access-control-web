@@ -21,6 +21,7 @@ import {
   Settings as SettingsIcon,
   Dashboard as DashboardIcon,
   PlayArrow as OperationIcon,
+  AdminPanelSettings as RoleIcon,
   ExpandLess,
   ExpandMore,
   ChevronLeft as ChevronLeftIcon,
@@ -100,6 +101,12 @@ export const Sidebar = ({ open, onClose, onToggle }: SidebarProps) => {
           path: '/operations',
         },
         {
+          id: 'roles',
+          title: 'Papéis',
+          icon: <RoleIcon />,
+          path: '/roles',
+        },
+        {
           id: 'permissions',
           title: 'Permissões',
           icon: <SecurityIcon />,
@@ -110,7 +117,6 @@ export const Sidebar = ({ open, onClose, onToggle }: SidebarProps) => {
           title: 'Usuários',
           icon: <PersonIcon />,
           path: '/users',
-          badge: 'Em breve',
         },
 
       ],

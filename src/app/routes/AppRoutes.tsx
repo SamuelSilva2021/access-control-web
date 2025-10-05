@@ -6,6 +6,8 @@ import { GroupTypesTestPage, GroupTypesPage } from '../../features/groups';
 import { ModulesPage } from '../../features/modules';
 import { OperationsPage, OperationsTestPage } from '../../features/operations';
 import { PermissionsPage } from '../../features/permissions';
+import { RolesPage } from '../../features/roles';
+import { UsersPage } from '../../features/users';
 import { ProtectedRoute } from './ProtectedRoute';
 import { MainLayout } from '../../shared/components';
 import { ROUTES } from '../../shared/constants';
@@ -115,7 +117,31 @@ export const AppRoutes = () => {
         } 
       />
       
-      {/* TODO: Adicionar rotas para usuários, roles, etc. */}
+      {/* Rotas de Roles */}
+      <Route 
+        path={ROUTES.ROLES} 
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <RolesPage />
+            </MainLayout>
+          </ProtectedRoute>
+        } 
+      />
+      
+      {/* Rotas de Usuários */}
+      <Route 
+        path={ROUTES.USERS} 
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <UsersPage />
+            </MainLayout>
+          </ProtectedRoute>
+        } 
+      />
+      
+      {/* TODO: Adicionar mais rotas conforme necessário */}
       
       {/* Rota de fallback - redireciona para dashboard */}
       <Route path="*" element={<Navigate to={ROUTES.DASHBOARD} replace />} />

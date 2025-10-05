@@ -138,14 +138,10 @@ export const usePermissions = (options: UsePermissionsOptions = {}): UsePermissi
       
       logger.info('✅ Permissão atualizada com sucesso:', updatedPermission);
       
-      // Atualiza o estado local diretamente para UX mais responsiva
-      setState(prev => ({
-        ...prev,
-        permissions: prev.permissions.map(permission => 
-          permission.id === id ? updatedPermission : permission
-        ),
-        loading: false
-      }));
+      // Recarrega os dados para garantir sincronização completa
+      await loadPermissions(state.currentPage);
+      
+      setState(prev => ({ ...prev, loading: false }));
       
       return updatedPermission;
     } catch (error) {
@@ -159,7 +155,7 @@ export const usePermissions = (options: UsePermissionsOptions = {}): UsePermissi
       }));
       return null;
     }
-  }, []);
+  }, [loadPermissions, state.currentPage]);
 
   const deletePermission = useCallback(async (id: string): Promise<boolean> => {
     setState(prev => ({ ...prev, loading: true, error: null }));
@@ -203,14 +199,10 @@ export const usePermissions = (options: UsePermissionsOptions = {}): UsePermissi
       
       logger.info('✅ Status da permissão alternado com sucesso:', updatedPermission);
       
-      // Atualiza o estado local
-      setState(prev => ({
-        ...prev,
-        permissions: prev.permissions.map(permission => 
-          permission.id === id ? updatedPermission : permission
-        ),
-        loading: false
-      }));
+      // Recarrega os dados para garantir sincronização completa
+      await loadPermissions(state.currentPage);
+      
+      setState(prev => ({ ...prev, loading: false }));
       
       return true;
     } catch (error) {
@@ -224,7 +216,7 @@ export const usePermissions = (options: UsePermissionsOptions = {}): UsePermissi
       }));
       return false;
     }
-  }, []);
+  }, [loadPermissions, state.currentPage]);
 
   const refreshData = useCallback(async () => {
     await loadPermissions(state.currentPage);
