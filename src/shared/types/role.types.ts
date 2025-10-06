@@ -18,7 +18,7 @@ export interface Role {
 
 export interface CreateRoleRequest {
   name: string;
-  description?: string;
+  description: string; // Agora obrigatório
   code?: string;
   tenantId?: string;
   applicationId?: string;
@@ -32,6 +32,8 @@ export interface UpdateRoleRequest {
   description?: string;
   code?: string;
   isActive?: boolean;
+  tenantId?: string;
+  applicationId?: string;
   permissionIds?: string[];
   accessGroupIds?: string[];
 }

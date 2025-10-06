@@ -22,6 +22,8 @@ interface FormData {
   description: string;
   code: string;
   isActive: boolean;
+  tenantId?: string;
+  applicationId?: string;
 }
 
 /**
@@ -48,6 +50,8 @@ export const RoleForm = ({
     description: '',
     code: '',
     isActive: true,
+    tenantId: undefined,
+    applicationId: undefined,
   });
 
   // Estado de validação
@@ -64,6 +68,8 @@ export const RoleForm = ({
         description: role.description || '',
         code: role.code || '',
         isActive: role.isActive,
+        tenantId: role.tenantId,
+        applicationId: role.applicationId,
       });
     } else {
       // Reset para modo criação
@@ -72,6 +78,8 @@ export const RoleForm = ({
         description: '',
         code: '',
         isActive: true,
+        tenantId: undefined,
+        applicationId: undefined,
       });
     }
     setFieldErrors({});
@@ -95,7 +103,13 @@ export const RoleForm = ({
         return '';
 
       case 'description':
-        if (value && value.length > 500) {
+        if (!value || value.trim().length === 0) {
+          return 'Descrição é obrigatória';
+        }
+        if (value.trim().length < 5) {
+          return 'Descrição deve ter pelo menos 5 caracteres';
+        }
+        if (value.length > 500) {
           return 'Descrição deve ter no máximo 500 caracteres';
         }
         return '';
@@ -157,6 +171,9 @@ export const RoleForm = ({
 
   /**
    * Handle submit do formulário
+   * 
+   * CORREÇÃO: Inclui tenantId e applicationId na atualização para evitar 
+   * que o backend os altere para null inadvertidamente
    */
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -166,13 +183,27 @@ export const RoleForm = ({
     }
 
     try {
-      // Remove campos vazios opcionais para criação/atualização
-      const submitData: CreateRoleRequest | UpdateRoleRequest = {
-        name: formData.name.trim(),
-        description: formData.description.trim() || undefined,
-        code: formData.code.trim().toUpperCase() || undefined,
-        ...(isEditing && { isActive: formData.isActive })
-      };
+      // Prepara dados para submissão
+      let submitData: CreateRoleRequest | UpdateRoleRequest;
+      
+      if (isEditing) {
+        // Para edição, inclui tenantId e applicationId para preservar valores originais
+        submitData = {
+          name: formData.name.trim(),
+          description: formData.description.trim(),
+          code: formData.code.trim().toUpperCase() || undefined,
+          isActive: formData.isActive,
+          tenantId: formData.tenantId,
+          applicationId: formData.applicationId,
+        };
+      } else {
+        // Para criação, só inclui campos básicos
+        submitData = {
+          name: formData.name.trim(),
+          description: formData.description.trim(),
+          code: formData.code.trim().toUpperCase() || undefined,
+        };
+      }
 
       await onSubmit(submitData);
       
@@ -236,7 +267,8 @@ export const RoleForm = ({
           value={formData.description}
           onChange={handleFieldChange('description')}
           error={Boolean(fieldErrors.description)}
-          helperText={fieldErrors.description || 'Descrição detalhada do papel no sistema'}
+          helperText={fieldErrors.description || 'Descrição detalhada do papel no sistema (obrigatório)'}
+          required
           fullWidth
           multiline
           rows={3}
