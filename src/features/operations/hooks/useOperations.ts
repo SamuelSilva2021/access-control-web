@@ -108,7 +108,8 @@ export const useOperations = (options: UseOperationsOptions = {}): UseOperations
         loading: false,
       }));
       logger.error('❌ Error:', errorMessage);
-      return null;
+      // Propaga o erro para o componente pai poder tratar
+      throw error;
     }
   }, []);
 
@@ -138,7 +139,8 @@ export const useOperations = (options: UseOperationsOptions = {}): UseOperations
         loading: false,
       }));
       logger.error('❌ Error:', errorMessage);
-      return null;
+      // Propaga o erro para o componente pai poder tratar
+      throw error;
     }
   }, []);
 

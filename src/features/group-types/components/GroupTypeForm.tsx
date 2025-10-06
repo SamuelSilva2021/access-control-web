@@ -155,6 +155,9 @@ export const GroupTypeForm = ({
           helperText={errors.code || 'Código único para identificação (apenas letras maiúsculas, números e _)'}
           disabled={isSubmitting}
           required
+          inputProps={{
+            style: { fontFamily: 'monospace', fontWeight: 600 }
+          }}
         />
 
         {/* Descrição */}

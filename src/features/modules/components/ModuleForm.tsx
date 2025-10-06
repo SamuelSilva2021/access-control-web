@@ -77,6 +77,7 @@ export const ModuleForm = ({
       
       case 'moduleKey':
         if (value && value.length > 100) return 'Chave do módulo não pode exceder 100 caracteres';
+        if (value && !/^[A-Z0-9_-]*$/.test(value)) return 'Chave deve conter apenas letras maiúsculas, números, underscore e hífen';
         return '';
       
       default:
@@ -87,7 +88,12 @@ export const ModuleForm = ({
   const handleInputChange = (field: keyof ModuleFormData) => (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
-    const value = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
+    let value = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
+    
+    // Aplica uppercase para o campo moduleKey
+    if (field === 'moduleKey' && typeof value === 'string') {
+      value = value.toUpperCase();
+    }
     
     setFormData(prev => ({
       ...prev,
@@ -136,7 +142,7 @@ export const ModuleForm = ({
       name: formData.name.trim(),
       description: formData.description.trim(),
       url: formData.url.trim(),
-      moduleKey: formData.moduleKey.trim() || undefined,
+      moduleKey: formData.moduleKey.trim().toUpperCase() || undefined,
       code: formData.code.trim() || undefined,
       applicationId: formData.applicationId.trim() || undefined,
       isActive: formData.isActive,
@@ -208,10 +214,13 @@ export const ModuleForm = ({
           value={formData.moduleKey}
           onChange={handleInputChange('moduleKey')}
           error={!!errors.moduleKey}
-          helperText={errors.moduleKey || 'Identificador único do módulo (opcional)'}
+          helperText={errors.moduleKey || 'Identificador único do módulo (opcional) - letras maiúsculas, números, _ e -'}
           fullWidth
           disabled={isSubmitting}
-          inputProps={{ maxLength: 100 }}
+          inputProps={{ 
+            maxLength: 100,
+            style: { fontFamily: 'monospace', fontWeight: 600 }
+          }}
         />
 
         {/* Código */}

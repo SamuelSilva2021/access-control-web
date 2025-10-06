@@ -104,9 +104,9 @@ export const RoleForm = ({
         if (value && value.length > 50) {
           return 'Código deve ter no máximo 50 caracteres';
         }
-        // Código deve ser alfanumérico (opcional)
-        if (value && !/^[a-zA-Z0-9_-]*$/.test(value)) {
-          return 'Código deve conter apenas letras, números, _ ou -';
+        // Código deve ser apenas maiúsculas, números, underscore e hífen
+        if (value && !/^[A-Z0-9_-]*$/.test(value)) {
+          return 'Código deve conter apenas letras maiúsculas, números, _ e -';
         }
         return '';
 
@@ -138,9 +138,14 @@ export const RoleForm = ({
   const handleFieldChange = (field: keyof FormData) => (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
-    const value = event.target.type === 'checkbox' 
+    let value = event.target.type === 'checkbox' 
       ? event.target.checked 
       : event.target.value;
+
+    // Aplica uppercase para o campo code
+    if (field === 'code' && typeof value === 'string') {
+      value = value.toUpperCase();
+    }
 
     setFormData(prev => ({ ...prev, [field]: value }));
     
@@ -165,7 +170,7 @@ export const RoleForm = ({
       const submitData: CreateRoleRequest | UpdateRoleRequest = {
         name: formData.name.trim(),
         description: formData.description.trim() || undefined,
-        code: formData.code.trim() || undefined,
+        code: formData.code.trim().toUpperCase() || undefined,
         ...(isEditing && { isActive: formData.isActive })
       };
 
@@ -214,10 +219,13 @@ export const RoleForm = ({
             value={formData.code}
             onChange={handleFieldChange('code')}
             error={Boolean(fieldErrors.code)}
-            helperText={fieldErrors.code || 'Código único do role (opcional)'}
+            helperText={fieldErrors.code || 'Código único do role (opcional) - letras maiúsculas, números, _ e -'}
             fullWidth
             disabled={loading}
             placeholder="ex: ADMIN, USER, MANAGER"
+            inputProps={{
+              style: { fontFamily: 'monospace', fontWeight: 600 }
+            }}
           />
         </Stack>
 

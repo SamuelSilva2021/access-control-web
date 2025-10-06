@@ -20,6 +20,7 @@ import type { Operation, CreateOperationRequest, UpdateOperationRequest } from '
 export const OperationsPage = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingOperation, setEditingOperation] = useState<Operation | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const {
     operations,
@@ -57,17 +58,26 @@ export const OperationsPage = () => {
       if (editingOperation) {
         const result = await updateOperation(editingOperation.id, data as UpdateOperationRequest);
         console.log('✅ Update result:', result);
+        setSuccessMessage('Operação atualizada com sucesso!');
       } else {
         const result = await createOperation(data as CreateOperationRequest);
         console.log('✅ Create result:', result);
+        setSuccessMessage('Operação criada com sucesso!');
       }
+      
       // Se chegou até aqui, a operação foi bem-sucedida
+      // Fechar o dialog e limpar estados
       setDialogOpen(false);
       setEditingOperation(null);
       clearError();
+      
+      // Remove a mensagem de sucesso após 5 segundos
+      setTimeout(() => setSuccessMessage(null), 5000);
+      
     } catch (error) {
       console.error('❌ Erro na operação:', error);
-      // O erro já foi tratado pelo hook, não precisamos fechar o dialog
+      // NÃO fechar o dialog em caso de erro para permitir correção
+      // O erro já foi capturado pelo hook e será exibido no UI
     }
   };
 
@@ -75,6 +85,7 @@ export const OperationsPage = () => {
     setDialogOpen(false);
     setEditingOperation(null);
     clearError();
+    setSuccessMessage(null); // Limpa mensagem de sucesso ao fechar
   };
 
   return (
@@ -91,6 +102,16 @@ export const OperationsPage = () => {
       />
 
       <StyledCard>
+        {successMessage && (
+          <Alert 
+            severity="success" 
+            onClose={() => setSuccessMessage(null)}
+            sx={{ mb: 2 }}
+          >
+            {successMessage}
+          </Alert>
+        )}
+        
         {error && (
           <Alert 
             severity="error" 

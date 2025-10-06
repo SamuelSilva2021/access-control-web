@@ -27,26 +27,13 @@ interface QueryParams {
   sortOrder?: 'asc' | 'desc';
 }
 
-// Interface específica para a resposta da API de Operations
+// Interface específica para a resposta da API de Operations quando lista (diferente estrutura)
 interface OperationsApiResponse {
   succeeded: boolean;
   successResult: any;
   errors: ErrorDTO[];
   headers: Record<string, any>;
   data: Operation[]; // A API retorna um array direto
-  requestUrl: string | null;
-  requestBody: string | null;
-  rawRequestBody: string | null;
-  exception: string | null;
-}
-
-// Interface para respostas de operação única
-interface OperationApiResponse {
-  succeeded: boolean;
-  successResult: any;
-  errors: ErrorDTO[];
-  headers: Record<string, any>;
-  data: Operation;
   requestUrl: string | null;
   requestBody: string | null;
   rawRequestBody: string | null;
@@ -115,49 +102,107 @@ export class OperationService {
    * Busca uma operação específica por ID
    */
   static async getOperationById(id: string): Promise<Operation> {
-    const response = await httpClient.get<OperationApiResponse>(`${this.BASE_URL}/${id}`);
+    const response = await httpClient.get<Operation>(`${this.BASE_URL}/${id}`);
     
-    if (!response.data.succeeded) {
-      throw new Error(`Erro na API: ${getErrorMessage(response.data.errors)}`);
+    if (!response.succeeded) {
+      const errorMessage = Array.isArray(response.errors) && response.errors.length > 0
+        ? response.errors.join(', ')
+        : 'Erro desconhecido na API';
+      throw new Error(`Erro na API: ${errorMessage}`);
     }
     
-    return response.data.data;
+    return response.data;
   }
 
   /**
    * Cria uma nova operação
    */
   static async createOperation(data: CreateOperationRequest): Promise<Operation> {
-    const response = await httpClient.post<OperationApiResponse>(this.BASE_URL, data);
-    
-    if (!response.data.succeeded) {
-      throw new Error(`Erro na API: ${getErrorMessage(response.data.errors)}`);
+    try {
+      console.log('🔄 OperationService: Enviando dados para criação:', data);
+      
+      const response = await httpClient.post<Operation>(this.BASE_URL, data);
+      
+      console.log('🔍 OperationService: Resposta da API:', {
+        succeeded: response.succeeded,
+        errors: response.errors,
+        data: response.data
+      });
+      
+      if (!response.succeeded) {
+        const errorMessage = Array.isArray(response.errors) && response.errors.length > 0
+          ? response.errors.join(', ')
+          : 'Erro desconhecido na API';
+          
+        console.error('❌ OperationService: API retornou erro:', {
+          errors: response.errors,
+          errorMessage
+        });
+        throw new Error(`Erro na API: ${errorMessage}`);
+      }
+      
+      if (!response.data) {
+        console.error('❌ OperationService: API não retornou dados válidos');
+        throw new Error('API não retornou dados válidos para a operação criada');
+      }
+      
+      console.log('✅ OperationService: Operação criada com sucesso:', response.data);
+      return response.data;
+      
+    } catch (error: any) {
+      console.error('❌ OperationService: Erro ao criar operação:', error);
+      
+      // Se for um erro de rede ou HTTP, vamos capturar mais detalhes
+      if (error.response) {
+        console.error('❌ OperationService: Detalhes do erro HTTP:', {
+          status: error.response.status,
+          statusText: error.response.statusText,
+          data: error.response.data
+        });
+        
+        // Tenta extrair a mensagem de erro mais específica
+        if (error.response.data?.errors?.length > 0) {
+          const specificError = Array.isArray(error.response.data.errors)
+            ? error.response.data.errors.join(', ')
+            : 'Erro na resposta da API';
+          throw new Error(`Erro na API: ${specificError}`);
+        }
+        
+        throw new Error(`Erro HTTP ${error.response.status}: ${error.response.statusText}`);
+      }
+      
+      // Re-lança o erro original se não for um erro HTTP
+      throw error;
     }
-    
-    return response.data.data;
   }
 
   /**
    * Atualiza uma operação existente
    */
   static async updateOperation(id: string, data: UpdateOperationRequest): Promise<Operation> {
-    const response = await httpClient.put<OperationApiResponse>(`${this.BASE_URL}/${id}`, data);
+    const response = await httpClient.put<Operation>(`${this.BASE_URL}/${id}`, data);
     
-    if (!response.data.succeeded) {
-      throw new Error(`Erro na API: ${getErrorMessage(response.data.errors)}`);
+    if (!response.succeeded) {
+      const errorMessage = Array.isArray(response.errors) && response.errors.length > 0
+        ? response.errors.join(', ')
+        : 'Erro desconhecido na API';
+      throw new Error(`Erro na API: ${errorMessage}`);
     }
     
-    return response.data.data;
+    return response.data;
   }
 
   /**
    * Exclui uma operação
    */
   static async deleteOperation(id: string): Promise<void> {
-    const response = await httpClient.delete<OperationApiResponse>(`${this.BASE_URL}/${id}`);
+    const response = await httpClient.delete<void>(`${this.BASE_URL}/${id}`);
     
-    if (!response.data.succeeded) {
-      throw new Error(`Erro na API: ${getErrorMessage(response.data.errors)}`);
+    if (!response.succeeded) {
+      const errorMessage = Array.isArray(response.errors) && response.errors.length > 0
+        ? response.errors.join(', ')
+        : 'Erro desconhecido na API';
+      throw new Error(`Erro na API: ${errorMessage}`);
     }
   }
 
@@ -175,7 +220,8 @@ export class OperationService {
           } 
         }
       );
-      return response.data.exists;
+      // Como a resposta é um objeto simples, acessamos direto o campo
+      return response.data?.exists || false;
     } catch (error) {
       console.warn('Erro ao verificar valor da operação:', error);
       return false;
