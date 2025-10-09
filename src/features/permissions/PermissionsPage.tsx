@@ -2,7 +2,8 @@ import { useState } from 'react';
 import {
   PageHeader,
   ResponsiveContainer,
-  StyledCard
+  StyledCard,
+  Pagination
 } from '../../shared/components';
 import { Add as AddIcon, Lock as PermissionIcon } from '@mui/icons-material';
 import { Typography, Box, CircularProgress, Alert } from '@mui/material';
@@ -20,17 +21,24 @@ import type { Permission, CreatePermissionRequest, UpdatePermissionRequest } fro
 export const PermissionsPage = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPermission, setEditingPermission] = useState<Permission | null>(null);
+  const [pageSize, setPageSize] = useState(10);
 
   const {
     permissions,
     loading,
     error,
+    totalCount,
+    currentPage,
+    totalPages,
+    loadPermissions,
     createPermission,
     updatePermission,
     deletePermission,
     toggleStatus,
     clearError,
-  } = usePermissions();
+  } = usePermissions({
+    pageSize,
+  });
 
   const handleCreatePermission = () => {
     setEditingPermission(null);
@@ -69,6 +77,16 @@ export const PermissionsPage = () => {
     clearError();
   };
 
+  // Handlers de paginação
+  const handlePageChange = (page: number) => {
+    loadPermissions(page);
+  };
+
+  const handlePageSizeChange = (newPageSize: number) => {
+    setPageSize(newPageSize);
+    // O hook irá automaticamente recarregar os dados com o novo pageSize
+  };
+
   return (
     <ResponsiveContainer>
       <PageHeader
@@ -103,7 +121,7 @@ export const PermissionsPage = () => {
           <>
             <Box sx={{ mb: 2 }}>
               <Typography variant="h6" gutterBottom>
-                Permissões Cadastradas ({permissions.length})
+                Permissões Cadastradas ({totalCount > 0 ? totalCount : permissions.length})
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Gerencie as permissões que controlam o acesso às funcionalidades do sistema
@@ -117,6 +135,19 @@ export const PermissionsPage = () => {
               onDelete={handleDeletePermission}
               onToggleStatus={handleToggleStatus}
             />
+
+            {/* Controles de Paginação */}
+            {totalCount > 0 && (
+              <Pagination
+                page={currentPage}
+                totalPages={totalPages}
+                totalCount={totalCount}
+                pageSize={pageSize}
+                onPageChange={handlePageChange}
+                onPageSizeChange={handlePageSizeChange}
+                loading={loading}
+              />
+            )}
           </>
         )}
       </StyledCard>

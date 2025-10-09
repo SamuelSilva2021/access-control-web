@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Drawer,
   List,
@@ -27,6 +27,8 @@ import {
   ChevronLeft as ChevronLeftIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { usePermissions, usePermissionStore } from '../../stores/permission.store';
+import { ModuleKey } from '../../types/permission.types';
 import { layout } from '../../theme';
 
 export interface SidebarProps {
@@ -41,6 +43,8 @@ interface MenuSection {
   icon: React.ReactNode;
   path?: string;
   children?: MenuItem[];
+  moduleKey?: string; // Chave do módulo para verificar permissão
+  operation?: string; // Operação necessária (padrão: SELECT)
 }
 
 interface MenuItem {
@@ -49,6 +53,8 @@ interface MenuItem {
   icon: React.ReactNode;
   path: string;
   badge?: string;
+  moduleKey?: string; // Chave do módulo para verificar permissão
+  operation?: string; // Operação necessária (padrão: SELECT)
 }
 
 /**
@@ -60,16 +66,19 @@ export const Sidebar = ({ open, onClose, onToggle }: SidebarProps) => {
   const location = useLocation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
+  const { hasAccess } = usePermissions();
+  const permissions = usePermissionStore(state => state.permissions);
 
   const [expandedSections, setExpandedSections] = useState<string[]>(['access-control']);
 
-  // Definição dos módulos e seções
+  // Definição dos módulos e seções com permissões
   const menuSections: MenuSection[] = [
     {
       id: 'dashboard',
       title: 'Dashboard',
       icon: <DashboardIcon />,
       path: '/dashboard',
+      // Dashboard não precisa de permissão específica - sempre visível
     },
     {
       id: 'access-control',
@@ -81,42 +90,56 @@ export const Sidebar = ({ open, onClose, onToggle }: SidebarProps) => {
           title: 'Grupos de Acesso',
           icon: <GroupIcon />,
           path: '/access-groups',
+          moduleKey: ModuleKey.ACCESS_GROUP,
+          operation: 'SELECT',
         },
         {
           id: 'group-types',
           title: 'Tipos de Grupo',
           icon: <GroupIcon />,
           path: '/group-types',
+          moduleKey: ModuleKey.GROUP_TYPE,
+          operation: 'SELECT',
         },
         {
           id: 'modules',
           title: 'Módulos',
           icon: <SecurityIcon />,
           path: '/modules',
+          moduleKey: ModuleKey.MODULES,
+          operation: 'SELECT',
         },
         {
           id: 'operations',
           title: 'Operações',
           icon: <OperationIcon />,
           path: '/operations',
+          moduleKey: ModuleKey.OPERATION_MODULE,
+          operation: 'SELECT',
         },
         {
           id: 'roles',
           title: 'Papéis',
           icon: <RoleIcon />,
           path: '/roles',
+          moduleKey: ModuleKey.ROLE_MODULE,
+          operation: 'SELECT',
         },
         {
           id: 'permissions',
           title: 'Permissões',
           icon: <SecurityIcon />,
           path: '/permissions',
+          moduleKey: ModuleKey.PERMISSION_MODULE,
+          operation: 'SELECT',
         },
         {
           id: 'users',
           title: 'Usuários',
           icon: <PersonIcon />,
           path: '/users',
+          moduleKey: ModuleKey.USER_MODULE,
+          operation: 'SELECT',
         },
 
       ],
@@ -132,6 +155,7 @@ export const Sidebar = ({ open, onClose, onToggle }: SidebarProps) => {
           icon: <SettingsIcon />,
           path: '/settings/system',
           badge: 'Em breve',
+          // Configurações não precisam de permissão específica por enquanto
         },
         {
           id: 'profile',
@@ -139,10 +163,48 @@ export const Sidebar = ({ open, onClose, onToggle }: SidebarProps) => {
           icon: <PersonIcon />,
           path: '/settings/profile',
           badge: 'Em breve',
+          // Perfil sempre visível para usuário logado
         },
       ],
     },
   ];
+
+  // Função para verificar se um item tem permissão
+  const hasPermissionForItem = (item: MenuItem | MenuSection): boolean => {
+    if (!item.moduleKey) return true; // Se não tem moduleKey, sempre visível
+    const operation = item.operation || 'SELECT';
+    return hasAccess(item.moduleKey, operation as any);
+  };
+
+  // Filtrar itens do menu baseado nas permissões
+  const filteredMenuSections = useMemo(() => {
+    // Se as permissões ainda não foram carregadas, retorna menu vazio
+    if (!permissions) {
+      return [];
+    }
+
+    return menuSections
+      .map(section => {
+        // Se a seção tem filhos, filtra os filhos primeiro
+        if (section.children) {
+          const filteredChildren = section.children.filter(hasPermissionForItem);
+          
+          // Se não sobrou nenhum filho com permissão, esconde a seção inteira
+          if (filteredChildren.length === 0) {
+            return null;
+          }
+          
+          return {
+            ...section,
+            children: filteredChildren
+          };
+        }
+        
+        // Para seções sem filhos, verifica a permissão da própria seção
+        return hasPermissionForItem(section) ? section : null;
+      })
+      .filter((section): section is MenuSection => section !== null);
+  }, [permissions, hasAccess]);
 
   const handleSectionClick = (section: MenuSection) => {
     if (section.path) {
@@ -198,8 +260,16 @@ export const Sidebar = ({ open, onClose, onToggle }: SidebarProps) => {
 
       {/* Navigation Menu */}
       <Box sx={{ flex: 1, overflow: 'auto' }}>
-        <List sx={{ py: 1 }}>
-          {menuSections.map((section, sectionIndex) => (
+        {!permissions ? (
+          // Mostra loading enquanto as permissões não carregam
+          <Box sx={{ p: 2, textAlign: 'center' }}>
+            <Typography variant="body2" color="text.secondary">
+              Carregando permissões...
+            </Typography>
+          </Box>
+        ) : (
+          <List sx={{ py: 1 }}>
+            {filteredMenuSections.map((section, sectionIndex) => (
             <Box key={section.id}>
               {sectionIndex > 0 && <Divider sx={{ my: 1 }} />}
               
@@ -300,6 +370,7 @@ export const Sidebar = ({ open, onClose, onToggle }: SidebarProps) => {
             </Box>
           ))}
         </List>
+        )}
       </Box>
 
       {/* Footer */}

@@ -53,10 +53,16 @@ export const usePermissions = (options: UsePermissionsOptions = {}): UsePermissi
   }, []);
 
   const loadPermissions = useCallback(async (page = 1, search?: string) => {
-    setState(prev => ({ ...prev, loading: true, error: null }));
+    setState(prev => ({ 
+      ...prev, 
+      loading: true, 
+      error: null,
+      // Limpa os dados se estiver mudando de página para evitar flicker
+      ...(page !== prev.currentPage ? { permissions: [] } : {})
+    }));
     
     try {
-      logger.info(`🔄 Carregando permissões - Página: ${page}, Busca: ${search || 'N/A'}`);
+      logger.info(`🔄 Carregando permissões - Página: ${page}, Busca: ${search || 'N/A'}, PageSize: ${pageSize}`);
       
       const response = await PermissionService.getPermissions({
         page,
@@ -72,7 +78,8 @@ export const usePermissions = (options: UsePermissionsOptions = {}): UsePermissi
       logger.info('✅ Permissões carregadas com sucesso:', {
         total: response.totalCount,
         página: response.pageNumber,
-        totalPáginas: response.totalPages
+        totalPáginas: response.totalPages,
+        itensNaPagina: response.data.length
       });
 
       setState(prev => ({
@@ -229,6 +236,13 @@ export const usePermissions = (options: UsePermissionsOptions = {}): UsePermissi
       loadPermissions();
     }
   }, [autoLoad, loadPermissions]);
+
+  // Recarregar quando pageSize muda
+  useEffect(() => {
+    if (hasLoadedRef.current) {
+      loadPermissions(1); // Sempre volta para a primeira página quando pageSize muda
+    }
+  }, [pageSize]);
 
   return {
     permissions: state.permissions,

@@ -1,9 +1,8 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { 
   CreateGroupTypeRequest, 
   UpdateGroupTypeRequest 
 } from '../types';
-import { AccessGroupService } from '../services';
 
 // Query keys para cache management
 export const GROUP_TYPE_QUERY_KEYS = {
@@ -16,22 +15,31 @@ export const GROUP_TYPE_QUERY_KEYS = {
 
 /**
  * Hook para buscar todos os group types
+ * TODO: Implementar método getGroupTypes no AccessGroupService
  */
 export const useGroupTypes = () => {
   return useQuery({
     queryKey: GROUP_TYPE_QUERY_KEYS.list(),
-    queryFn: () => AccessGroupService.getGroupTypes(),
+    queryFn: () => {
+      // TODO: Implementar AccessGroupService.getGroupTypes()
+      console.warn('getGroupTypes não implementado ainda');
+      return Promise.resolve([]);
+    },
     staleTime: 10 * 60 * 1000, // 10 minutos (mais cache pois muda menos)
   });
 };
 
 /**
  * Hook para buscar um group type específico
+ * TODO: Implementar método getGroupTypeById no AccessGroupService
  */
 export const useGroupType = (id: string) => {
   return useQuery({
     queryKey: GROUP_TYPE_QUERY_KEYS.detail(id),
-    queryFn: () => AccessGroupService.getGroupTypeById(id),
+    queryFn: () => {
+      console.warn('getGroupTypeById não implementado ainda');
+      return Promise.resolve(null);
+    },
     enabled: !!id,
     staleTime: 10 * 60 * 1000,
   });
@@ -39,13 +47,16 @@ export const useGroupType = (id: string) => {
 
 /**
  * Hook para criar group type
+ * TODO: Implementar método createGroupType no AccessGroupService
  */
 export const useCreateGroupType = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateGroupTypeRequest) => 
-      AccessGroupService.createGroupType(data),
+    mutationFn: (data: CreateGroupTypeRequest) => {
+      console.warn('createGroupType não implementado ainda');
+      return Promise.resolve(data as any);
+    },
     onSuccess: () => {
       // Invalida cache das listagens
       queryClient.invalidateQueries({
@@ -57,13 +68,16 @@ export const useCreateGroupType = () => {
 
 /**
  * Hook para atualizar group type
+ * TODO: Implementar método updateGroupType no AccessGroupService
  */
 export const useUpdateGroupType = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: UpdateGroupTypeRequest }) =>
-      AccessGroupService.updateGroupType(id, data),
+    mutationFn: ({ id, data }: { id: string; data: UpdateGroupTypeRequest }) => {
+      console.warn('updateGroupType não implementado ainda');
+      return Promise.resolve({ id, ...data } as any);
+    },
     onSuccess: (_, { id }) => {
       // Invalida cache das listagens e do item específico
       queryClient.invalidateQueries({
@@ -78,12 +92,16 @@ export const useUpdateGroupType = () => {
 
 /**
  * Hook para deletar group type
+ * TODO: Implementar método deleteGroupType no AccessGroupService
  */
 export const useDeleteGroupType = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => AccessGroupService.deleteGroupType(id),
+    mutationFn: (_id: string) => {
+      console.warn('deleteGroupType não implementado ainda');
+      return Promise.resolve();
+    },
     onSuccess: (_, id) => {
       // Remove do cache e invalida listas
       queryClient.removeQueries({

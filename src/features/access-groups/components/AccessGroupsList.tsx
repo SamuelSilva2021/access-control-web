@@ -36,6 +36,9 @@ export interface AccessGroupsListProps {
   pageSize?: number;
   onPageChange?: (page: number) => void;
   onPageSizeChange?: (pageSize: number) => void;
+  // Propriedades de permissão
+  canEdit?: boolean;
+  canDelete?: boolean;
 }
 
 /**
@@ -54,6 +57,8 @@ export const AccessGroupsList = ({
   pageSize = 10,
   onPageChange,
   onPageSizeChange,
+  canEdit = true,
+  canDelete = true,
 }: AccessGroupsListProps) => {
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
   const [selectedAccessGroup, setSelectedAccessGroup] = useState<AccessGroup | null>(null);
@@ -193,15 +198,17 @@ export const AccessGroupsList = ({
       minWidth: 80,
       align: 'center',
       format: (_, row) => (
-        <Tooltip title="Mais opções">
-          <IconButton
-            size="small"
-            onClick={(e) => handleMenuOpen(e, row)}
-            sx={{ ml: 1 }}
-          >
-            <MoreVertIcon />
-          </IconButton>
-        </Tooltip>
+        (canEdit || canDelete || onToggleStatus) ? (
+          <Tooltip title="Mais opções">
+            <IconButton
+              size="small"
+              onClick={(e) => handleMenuOpen(e, row)}
+              sx={{ ml: 1 }}
+            >
+              <MoreVertIcon />
+            </IconButton>
+          </Tooltip>
+        ) : null
       ),
     },
   ];
@@ -252,12 +259,14 @@ export const AccessGroupsList = ({
         transformOrigin={{ horizontal: 'right', vertical: 'top' }}
         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
       >
-        <MenuItem onClick={handleEdit}>
-          <ListItemIcon>
-            <EditIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Editar</ListItemText>
-        </MenuItem>
+        {canEdit && (
+          <MenuItem onClick={handleEdit}>
+            <ListItemIcon>
+              <EditIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Editar</ListItemText>
+          </MenuItem>
+        )}
         
         {onToggleStatus && (
           <MenuItem onClick={handleToggle}>
@@ -274,15 +283,17 @@ export const AccessGroupsList = ({
           </MenuItem>
         )}
         
-        <MenuItem 
-          onClick={handleDelete}
-          sx={{ color: 'error.main' }}
-        >
-          <ListItemIcon>
-            <DeleteIcon fontSize="small" color="error" />
-          </ListItemIcon>
-          <ListItemText>Excluir</ListItemText>
-        </MenuItem>
+        {canDelete && (
+          <MenuItem 
+            onClick={handleDelete}
+            sx={{ color: 'error.main' }}
+          >
+            <ListItemIcon>
+              <DeleteIcon fontSize="small" color="error" />
+            </ListItemIcon>
+            <ListItemText>Excluir</ListItemText>
+          </MenuItem>
+        )}
       </Menu>
     </>
   );

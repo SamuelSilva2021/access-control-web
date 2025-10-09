@@ -15,8 +15,20 @@ export * from './feedback/ErrorDisplay';
 // Data Display Components
 export * from './data-display/DataTable';
 
+// Common Components
+export * from './common/Pagination';
+
 // UI Components
 export * from './ui/ActionButtons';
 export * from './ui/StatusChip';
+
+// Protection Components
+export * from './Protected';
+
+// Menu Components
+export * from './Menu';
+
+// Debug Components (desenvolvimento)
+export * from './Debug';
 export * from './ui/StyledCard';
 export * from './ui';

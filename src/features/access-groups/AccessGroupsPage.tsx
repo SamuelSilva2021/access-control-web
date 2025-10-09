@@ -2,22 +2,29 @@ import { useState } from 'react';
 import {
   PageHeader,
   ResponsiveContainer,
-  StyledCard
+  StyledCard,
+  PermissionsDebug
 } from '../../shared/components';
 import { Add as AddIcon, Groups as GroupsIcon } from '@mui/icons-material';
 import { Typography, Box, CircularProgress, Alert } from '@mui/material';
 import { useAccessGroups } from '../../shared/hooks';
 import { useGroupTypes } from '../group-types/hooks';
+import { usePermissions } from '../../shared/stores';
 import { AccessGroupsList, AccessGroupDialog } from './components';
+import { ModuleKey } from '../../shared/types/permission.types';
 import type { AccessGroup, CreateAccessGroupRequest, UpdateAccessGroupRequest } from '../../shared/types';
 
 /**
  * Página de Grupos de Acesso
  * Gerencia todos os grupos de acesso do sistema
+ * Protegida por permissões de módulo ACCESS_GROUP
  */
 export const AccessGroupsPage = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingAccessGroup, setEditingAccessGroup] = useState<AccessGroup | null>(null);
+
+  // Hook de permissões para controle de acesso
+  const { canCreate, canUpdate, canDelete, hasAccess } = usePermissions();
 
   const {
     data: accessGroups = [],
@@ -39,6 +46,23 @@ export const AccessGroupsPage = () => {
     groupTypes = [],
   } = useGroupTypes();
 
+  // Verificar se tem permissão básica para visualizar
+  if (!hasAccess(ModuleKey.ACCESS_GROUP, 'SELECT')) {
+    return (
+      <ResponsiveContainer>
+        <Box sx={{ textAlign: 'center', py: 8 }}>
+          <GroupsIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
+          <Typography variant="h6" color="text.secondary" gutterBottom>
+            Acesso Negado
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Você não tem permissão para visualizar grupos de acesso.
+          </Typography>
+        </Box>
+      </ResponsiveContainer>
+    );
+  }
+
   // Debug: Log quando o componente re-renderiza
   console.log('🔄 AccessGroupsPage renderizou com:', {
     accessGroupsCount: accessGroups.length,
@@ -47,16 +71,28 @@ export const AccessGroupsPage = () => {
   });
 
   const handleCreateAccessGroup = () => {
+    if (!canCreate(ModuleKey.ACCESS_GROUP)) {
+      alert('Você não tem permissão para criar grupos de acesso.');
+      return;
+    }
     setEditingAccessGroup(null);
     setDialogOpen(true);
   };
 
   const handleEditAccessGroup = (accessGroup: AccessGroup) => {
+    if (!canUpdate(ModuleKey.ACCESS_GROUP)) {
+      alert('Você não tem permissão para editar grupos de acesso.');
+      return;
+    }
     setEditingAccessGroup(accessGroup);
     setDialogOpen(true);
   };
 
   const handleDeleteAccessGroup = async (accessGroup: AccessGroup) => {
+    if (!canDelete(ModuleKey.ACCESS_GROUP)) {
+      alert('Você não tem permissão para excluir grupos de acesso.');
+      return;
+    }
     if (window.confirm(`Tem certeza que deseja excluir o grupo "${accessGroup.name}"?`)) {
       await deleteAccessGroup(accessGroup.id);
       await refreshData(); // Recarrega a lista
@@ -117,11 +153,11 @@ export const AccessGroupsPage = () => {
         title="Grupos de Acesso"
         subtitle="Gerencie os grupos de acesso e suas permissões"
         icon={<GroupsIcon />}
-        actionButton={{
+        actionButton={canCreate(ModuleKey.ACCESS_GROUP) ? {
           label: 'Criar Grupo',
           onClick: handleCreateAccessGroup,
           icon: <AddIcon />
-        }}
+        } : undefined}
       />
 
       <StyledCard>
@@ -161,6 +197,8 @@ export const AccessGroupsPage = () => {
             pageSize={pageSize}
             onPageChange={handlePageChange}
             onPageSizeChange={handlePageSizeChange}
+            canEdit={canUpdate(ModuleKey.ACCESS_GROUP)}
+            canDelete={canDelete(ModuleKey.ACCESS_GROUP)}
           />
         )}
       </StyledCard>
@@ -173,6 +211,9 @@ export const AccessGroupsPage = () => {
         onSubmit={handleDialogSubmit}
         isSubmitting={loading}
       />
+      
+      {/* Debug de permissões - só aparece em desenvolvimento */}
+      <PermissionsDebug />
     </ResponsiveContainer>
   );
 };

@@ -7,7 +7,7 @@ import {
   Typography,
   useTheme,
 } from '@mui/material';
-import { Security, AdminPanelSettings } from '@mui/icons-material';
+import { AdminPanelSettings } from '@mui/icons-material';
 import { useAuth } from '../../shared/hooks';
 import { ROUTES } from '../../shared/constants';
 import { LoginForm } from './LoginForm';

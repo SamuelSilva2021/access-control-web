@@ -1,4 +1,6 @@
 // Tipos de Autenticação baseados na API
+import type { UserPermissions } from './permission.types';
+
 export interface LoginRequest {
   usernameOrEmail: string;
   password: string;
@@ -16,9 +18,7 @@ export interface UserInfo {
   username: string;
   email: string;
   fullName: string;
-  accessGroups: string[];
-  roles: string[];
-  permissions: string[];
+  permissions: UserPermissions;
   tenant: {
     id: string;
     name: string;
@@ -42,9 +42,6 @@ export interface AuthUser {
     slug: string;
     customDomain: string | null;
   };
-  permissions: string[];
-  roles: string[];
-  accessGroups: string[];
 }
 
 export interface AuthState {

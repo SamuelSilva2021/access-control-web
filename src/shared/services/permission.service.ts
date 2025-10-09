@@ -63,9 +63,11 @@ export class PermissionService {
   private static readonly BASE_URL = '/api/permissions';
 
   /**
-   * Lista todas as permissões (não paginado)
+   * Lista todas as permissões com paginação
    */
   static async getPermissions(params?: QueryParams): Promise<PaginatedResponse<Permission>> {
+    console.log('🔍 Buscando permissões com parâmetros:', params);
+    
     const response = await httpClient.get<Permission[] | PermissionsApiResponse>(
       this.BASE_URL,
       { params }
@@ -98,15 +100,86 @@ export class PermissionService {
     
     console.log('🔍 Debug - Permissions extraídas:', permissions);
     
-    // Simula paginação no frontend já que a API não é paginada
+    // Aplicar filtros no frontend se necessário
+    let filteredPermissions = permissions;
+    
+    // Filtro por busca
+    if (params?.search) {
+      const searchLower = params.search.toLowerCase();
+      filteredPermissions = filteredPermissions.filter(permission =>
+        permission.name.toLowerCase().includes(searchLower) ||
+        (permission.description && permission.description.toLowerCase().includes(searchLower)) ||
+        (permission.moduleName && permission.moduleName.toLowerCase().includes(searchLower))
+      );
+    }
+    
+    // Filtro por status
+    if (params?.isActive !== undefined) {
+      filteredPermissions = filteredPermissions.filter(permission => 
+        permission.isActive === params.isActive
+      );
+    }
+    
+    // Filtro por módulo
+    if (params?.moduleId) {
+      filteredPermissions = filteredPermissions.filter(permission => 
+        permission.moduleId === params.moduleId
+      );
+    }
+    
+    // Filtro por role
+    if (params?.roleId) {
+      filteredPermissions = filteredPermissions.filter(permission => 
+        permission.roleId === params.roleId
+      );
+    }
+    
+    // Ordenação
+    const sortBy = params?.sortBy || 'name';
+    const sortOrder = params?.sortOrder || 'asc';
+    
+    filteredPermissions.sort((a, b) => {
+      let aValue: any = a[sortBy as keyof Permission];
+      let bValue: any = b[sortBy as keyof Permission];
+      
+      // Tratamento especial para datas
+      if (sortBy === 'createdAt' || sortBy === 'updatedAt') {
+        aValue = new Date(aValue);
+        bValue = new Date(bValue);
+      }
+      
+      // Tratamento para strings
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        aValue = aValue.toLowerCase();
+        bValue = bValue.toLowerCase();
+      }
+      
+      let comparison = 0;
+      if (aValue > bValue) comparison = 1;
+      if (aValue < bValue) comparison = -1;
+      
+      return sortOrder === 'desc' ? -comparison : comparison;
+    });
+    
+    // Aplicar paginação no frontend
     const pageSize = params?.limit || 10;
     const currentPage = params?.page || 1;
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
-    const paginatedPermissions = permissions.slice(startIndex, endIndex);
+    const paginatedPermissions = filteredPermissions.slice(startIndex, endIndex);
     
-    const totalCount = permissions.length;
+    const totalCount = filteredPermissions.length;
     const totalPages = Math.ceil(totalCount / pageSize);
+    
+    console.log('📊 Paginação calculada:', {
+      totalCount,
+      pageSize,
+      currentPage,
+      totalPages,
+      startIndex,
+      endIndex,
+      itemsInPage: paginatedPermissions.length
+    });
     
     return {
       data: paginatedPermissions,

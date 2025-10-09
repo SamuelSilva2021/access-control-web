@@ -11,23 +11,15 @@ interface QueryParams {
   sortOrder?: 'asc' | 'desc';
 }
 
-/**
- * Serviço para operações CRUD de Módulos
- * Integração com saas-authentication-api
- */
 export class ModuleService {
   private static readonly BASE_URL = '/api/modules';
 
-  /**
-   * Lista todos os módulos com paginação
-   */
   static async getModules(params?: QueryParams): Promise<PaginatedResponse<Module>> {
     const response = await httpClient.get<AccessGroupApiResponse<Module>>(
       this.BASE_URL,
       { params }
     );
         
-    // A API retorna dados paginados no formato { items: [], page, limit, total, totalPages }
     const responseData = response.data;
     const modules = Array.isArray(responseData?.items) ? responseData.items : [];
     
@@ -42,18 +34,11 @@ export class ModuleService {
     };
   }
 
-  /**
-   * Busca um módulo específico por ID
-   */
   static async getModuleById(id: string): Promise<Module> {
     const response = await httpClient.get<Module>(`${this.BASE_URL}/${id}`);
-    // A API retorna o módulo direto no data quando busca por ID
     return response.data;
   }
 
-  /**
-   * Cria um novo módulo
-   */
   static async createModule(data: CreateModuleRequest): Promise<Module> {
     const response = await httpClient.post<Module>(
       this.BASE_URL,
@@ -88,7 +73,7 @@ export class ModuleService {
       const response = await this.getModules();
       
       const existingModule = response.data.find(module => 
-        module.moduleKey?.toLowerCase() === moduleKey.toLowerCase() && 
+        module.key?.toLowerCase() === moduleKey.toLowerCase() && // Mudança: moduleKey → key
         (!excludeId || module.id !== excludeId)
       );
       
@@ -106,6 +91,13 @@ export class ModuleService {
     // Como a API não tem endpoint específico, faremos um patch manual
     const module = await this.getModuleById(id);
     const updatedModule = await this.updateModule(id, {
+      name: module.name,
+      description: module.description || '',
+      url: module.url || '',
+      key: module.key || '', // Mudança: moduleKey → key
+      code: module.code,
+      applicationId: module.applicationId,
+      moduleTypeId: module.moduleTypeId,
       isActive: !module.isActive
     });
     

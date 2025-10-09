@@ -12,7 +12,7 @@ export interface ModuleFormData {
   name: string;
   description: string;
   url: string;
-  moduleKey: string;
+  key: string; // Mudança: moduleKey → key
   code: string;
   applicationId: string;
   isActive: boolean;
@@ -24,10 +24,6 @@ export interface ModuleFormProps {
   isSubmitting?: boolean;
 }
 
-/**
- * Formulário reutilizável para criar/editar Módulos
- * Validação client-side e UX otimizada
- */
 export const ModuleForm = ({
   initialData,
   onSubmit,
@@ -37,7 +33,7 @@ export const ModuleForm = ({
     name: '',
     description: '',
     url: '',
-    moduleKey: '',
+    key: '', // Mudança: moduleKey → key
     code: '',
     applicationId: '',
     isActive: true,
@@ -45,14 +41,13 @@ export const ModuleForm = ({
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Preenche formulário para edição
   useEffect(() => {
     if (initialData) {
       setFormData({
         name: initialData.name,
         description: initialData.description || '',
         url: initialData.url || '',
-        moduleKey: initialData.moduleKey || '',
+        key: initialData.key || '', // Mudança: moduleKey → key
         code: initialData.code || '',
         applicationId: initialData.applicationId || '',
         isActive: initialData.isActive,
@@ -75,9 +70,10 @@ export const ModuleForm = ({
         if (value.length > 500) return 'URL não pode exceder 500 caracteres';
         return '';
       
-      case 'moduleKey':
-        if (value && value.length > 100) return 'Chave do módulo não pode exceder 100 caracteres';
-        if (value && !/^[A-Z0-9_-]*$/.test(value)) return 'Chave deve conter apenas letras maiúsculas, números, underscore e hífen';
+      case 'key': // Mudança: moduleKey → key
+        if (!value.trim()) return 'Chave do módulo é obrigatória';
+        if (value.length > 100) return 'Chave do módulo não pode exceder 100 caracteres';
+        if (!/^[A-Z0-9_-]+$/.test(value)) return 'Chave deve conter apenas letras maiúsculas, números, underscore e hífen (sem espaços)';
         return '';
       
       default:
@@ -90,8 +86,7 @@ export const ModuleForm = ({
   ) => {
     let value = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
     
-    // Aplica uppercase para o campo moduleKey
-    if (field === 'moduleKey' && typeof value === 'string') {
+    if (field === 'key' && typeof value === 'string') { // Mudança: moduleKey → key
       value = value.toUpperCase();
     }
     
@@ -100,7 +95,6 @@ export const ModuleForm = ({
       [field]: value,
     }));
 
-    // Validação em tempo real apenas para campos de texto
     if (typeof value === 'string') {
       const error = validateField(field, value);
       setErrors(prev => ({
@@ -113,13 +107,11 @@ export const ModuleForm = ({
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    // Validação de campos obrigatórios e regras
     newErrors.name = validateField('name', formData.name);
     newErrors.description = validateField('description', formData.description);
     newErrors.url = validateField('url', formData.url);
-    newErrors.moduleKey = validateField('moduleKey', formData.moduleKey);
+    newErrors.key = validateField('key', formData.key); // Mudança: moduleKey → key
 
-    // Remove erros vazios
     Object.keys(newErrors).forEach(key => {
       if (!newErrors[key]) {
         delete newErrors[key];
@@ -137,17 +129,21 @@ export const ModuleForm = ({
       return;
     }
 
-    // Prepara dados para envio (remove campos vazios opcionais)
     const submitData: CreateModuleRequest | UpdateModuleRequest = {
       name: formData.name.trim(),
       description: formData.description.trim(),
       url: formData.url.trim(),
-      moduleKey: formData.moduleKey.trim().toUpperCase() || undefined,
+      // key é obrigatório agora (mudança: moduleKey → key)
+      key: formData.key.trim(),
       code: formData.code.trim() || undefined,
       applicationId: formData.applicationId.trim() || undefined,
       isActive: formData.isActive,
     };
 
+    console.log('📤 Enviando dados do módulo:', {
+      ...submitData,
+      key: `"${submitData.key}"` // Para ver exatamente o que está sendo enviado (mudança: moduleKey → key)
+    });
     onSubmit(submitData);
   };
 
@@ -210,11 +206,12 @@ export const ModuleForm = ({
         {/* Chave do Módulo */}
         <TextField
           label="Chave do Módulo"
-          placeholder="MODULO_EXEMPLO"
-          value={formData.moduleKey}
-          onChange={handleInputChange('moduleKey')}
-          error={!!errors.moduleKey}
-          helperText={errors.moduleKey || 'Identificador único do módulo (opcional) - letras maiúsculas, números, _ e -'}
+          placeholder="Ex: PERMISSION_MODULE, BILLING_MODULE, etc."
+          value={formData.key}
+          onChange={handleInputChange('key')}
+          error={!!errors.key}
+          helperText={errors.key || 'Identificador único do módulo (obrigatório) - Ex: PERMISSION_MODULE'}
+          required
           fullWidth
           disabled={isSubmitting}
           inputProps={{ 

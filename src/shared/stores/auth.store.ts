@@ -29,8 +29,8 @@ import type { AuthState, AuthUser, LoginRequest, LoginResponseData, UserInfo } f
 import { httpClient } from '../utils';
 import { API_ENDPOINTS } from '../constants';
 import { setToken, setRefreshToken, setStoredUser, clearAuth, getToken, getStoredUser, isTokenValid } from '../utils/auth-storage';
+import { usePermissionStore } from './permission.store';
 
-// Interface do store extendida
 interface AuthStore extends AuthState {
   initialize: () => Promise<void>;
   login: (credentials: LoginRequest) => Promise<void>;
@@ -65,10 +65,11 @@ export const useAuthStore = create<AuthStore>()(
               isLoading: false,
             };
 
-            // Se token existe mas é inválido, limpar tudo
             if (storedToken && storedUser && !tokenValid) {
-              console.log('🔐 Store: Token expirado detectado na inicialização - limpando dados');
               clearAuth();
+              usePermissionStore.getState().clearPermissions();
+            } else if (tokenValid && storedUser) {
+              usePermissionStore.getState().setPermissions(storedUser.permissions);
             }
 
             set(initialState);
@@ -78,9 +79,7 @@ export const useAuthStore = create<AuthStore>()(
               tokenValid: !!tokenValid
             });
 
-            // Listener para logout automático em caso de token expirado
             const handleTokenExpired = () => {
-              console.log('🔐 Store: Token expirado detectado - fazendo logout...');
               get().logout();
             };
 
@@ -102,38 +101,29 @@ export const useAuthStore = create<AuthStore>()(
           try {
             set({ isLoading: true });
 
-            // Realizar login
             const loginResponse = await httpClient.post<LoginResponseData>(API_ENDPOINTS.LOGIN, credentials);
             
-            console.log('Login response:', loginResponse);
-
             if (loginResponse.succeeded && loginResponse.data) {
               const { accessToken, refreshToken } = loginResponse.data;
 
-              // Salvar token temporariamente para fazer a requisição de user info
               setToken(accessToken);
               setRefreshToken(refreshToken);
-
-              // Buscar informações do usuário com o token recém obtido
               try {
                 const userInfoResponse = await httpClient.get<UserInfo>(API_ENDPOINTS.ME);
                 
                 if (userInfoResponse.succeeded && userInfoResponse.data) {
                   const userData = userInfoResponse.data;
                   
-                  // Salvar dados do usuário no localStorage
                   setStoredUser(userData);
 
-                  // Atualizar estado
+                  usePermissionStore.getState().setPermissions(userData.permissions);
+
                   const authUser: AuthUser = {
                     id: userData.id,
                     email: userData.email,
                     username: userData.username,
                     fullName: userData.fullName,
                     tenant: userData.tenant,
-                    permissions: userData.permissions,
-                    roles: userData.roles,
-                    accessGroups: userData.accessGroups,
                   };
 
                   set({
@@ -167,8 +157,9 @@ export const useAuthStore = create<AuthStore>()(
         logout: () => {
           console.log('🚪 Store: Fazendo logout...');
           
-          // Remove listener de token expirado
           window.removeEventListener('auth:token-expired', () => {});
+          
+          usePermissionStore.getState().clearPermissions();
           
           clearAuth();
           set({
