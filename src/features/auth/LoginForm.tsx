@@ -15,7 +15,6 @@ import { Visibility, VisibilityOff, Person, Lock } from '@mui/icons-material';
 import { useAuth } from '../../shared/hooks';
 import type { LoginRequest } from '../../shared/types';
 
-// Schema de validação com Zod
 const loginSchema = z.object({
   usernameOrEmail: z
     .string()
@@ -38,7 +37,6 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const { login } = useAuth();
-  console.log('🎯 LoginForm: Renderização com autenticação real');
 
   const {
     register,
@@ -58,20 +56,16 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
     try {
       setIsSubmitting(true);
       setError(null);
-      
-      console.log('🔐 LoginForm: Iniciando autenticação...');
-      
+            
       const loginRequest: LoginRequest = {
         usernameOrEmail: data.usernameOrEmail,
         password: data.password,
       };
 
       await login(loginRequest);
-      console.log('✅ LoginForm: Login realizado com sucesso');
       onSuccess?.();
       
     } catch (err: any) {
-      console.error('❌ LoginForm: Erro no login:', err);
       setError(err.message || 'Erro ao fazer login. Tente novamente.');
     } finally {
       setIsSubmitting(false);

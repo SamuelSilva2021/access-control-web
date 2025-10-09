@@ -25,7 +25,7 @@
 
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
-import type { AuthState, AuthUser, LoginRequest, LoginResponseData } from '../types';
+import type { AuthState, AuthUser, LoginRequest, LoginResponseData, UserInfo } from '../types';
 import { httpClient } from '../utils';
 import { API_ENDPOINTS } from '../constants';
 import { setToken, setRefreshToken, setStoredUser, clearAuth, getToken, getStoredUser, isTokenValid } from '../utils/auth-storage';
@@ -102,45 +102,64 @@ export const useAuthStore = create<AuthStore>()(
           try {
             set({ isLoading: true });
 
-            const response = await httpClient.post<LoginResponseData>(API_ENDPOINTS.LOGIN, credentials);
+            // Realizar login
+            const loginResponse = await httpClient.post<LoginResponseData>(API_ENDPOINTS.LOGIN, credentials);
             
-            console.log('Login response:', response);
+            console.log('Login response:', loginResponse);
 
-            if (response.succeeded && response.data) {
-              const { accessToken, refreshToken, user: userData } = response.data;
+            if (loginResponse.succeeded && loginResponse.data) {
+              const { accessToken, refreshToken } = loginResponse.data;
 
-              // Salvar dados no localStorage
+              // Salvar token temporariamente para fazer a requisição de user info
               setToken(accessToken);
               setRefreshToken(refreshToken);
-              setStoredUser(userData);
 
-              // Atualizar estado
-              const authUser: AuthUser = {
-                id: userData.id,
-                email: userData.email,
-                username: userData.username,
-                fullName: userData.fullName,
-                tenant: userData.tenant,
-                permissions: userData.permissions,
-                roles: userData.roles,
-                accessGroups: userData.accessGroups,
-              };
+              // Buscar informações do usuário com o token recém obtido
+              try {
+                const userInfoResponse = await httpClient.get<UserInfo>(API_ENDPOINTS.ME);
+                
+                if (userInfoResponse.succeeded && userInfoResponse.data) {
+                  const userData = userInfoResponse.data;
+                  
+                  // Salvar dados do usuário no localStorage
+                  setStoredUser(userData);
 
-              set({
-                isAuthenticated: true,
-                user: authUser,
-                token: accessToken,
-                isLoading: false,
-              });
+                  // Atualizar estado
+                  const authUser: AuthUser = {
+                    id: userData.id,
+                    email: userData.email,
+                    username: userData.username,
+                    fullName: userData.fullName,
+                    tenant: userData.tenant,
+                    permissions: userData.permissions,
+                    roles: userData.roles,
+                    accessGroups: userData.accessGroups,
+                  };
 
-              console.log('Login successful, user:', authUser);
+                  set({
+                    isAuthenticated: true,
+                    user: authUser,
+                    token: accessToken,
+                    isLoading: false,
+                  });
+
+                  console.log('Login successful, user:', authUser);
+                } else {
+                  throw new Error('Não foi possível obter informações do usuário');
+                }
+              } catch (userInfoError) {
+                console.error('Erro ao buscar informações do usuário:', userInfoError);
+                clearAuth();
+                throw new Error('Falha ao carregar informações do usuário');
+              }
 
             } else {
-              throw new Error('Informações do usuário não retornadas pela API');
+              throw new Error('Credenciais inválidas ou resposta inesperada da API');
             }
           } catch (error) {
             console.error('Erro no login:', error);
             set({ isLoading: false });
+            clearAuth();
             throw error;
           }
         },

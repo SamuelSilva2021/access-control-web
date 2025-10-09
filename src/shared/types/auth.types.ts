@@ -9,7 +9,6 @@ export interface LoginResponseData {
   refreshToken: string;
   tokenType: string;
   expiresIn: number;
-  user: UserInfo;
 }
 
 export interface UserInfo {

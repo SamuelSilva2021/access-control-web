@@ -18,19 +18,10 @@ export const LoginPage = () => {
   const { isAuthenticated, isLoading } = useAuth();
   const hasRedirected = useRef(false);
 
-  // Redirecionamento controlado - aprendido do debug
   useEffect(() => {
-    console.log('🔍 LoginPage: Verificando estado', { 
-      isAuthenticated, 
-      isLoading, 
-      hasRedirected: hasRedirected.current 
-    });
-    
-    // Só redireciona uma vez, quando realmente autenticado
     if (isAuthenticated && !isLoading && !hasRedirected.current) {
-      console.log('🚀 LoginPage: Redirecionando para dashboard...');
       hasRedirected.current = true;
-      
+
       // Timeout para garantir que o estado estabilize
       setTimeout(() => {
         navigate(ROUTES.DASHBOARD, { replace: true });
@@ -39,16 +30,13 @@ export const LoginPage = () => {
   }, [isAuthenticated, isLoading, navigate]);
 
   const handleLoginSuccess = () => {
-    console.log('✅ LoginPage: Login bem-sucedido, preparando redirecionamento...');
     hasRedirected.current = true;
-    
+
     // Timeout para permitir que o store atualize
     setTimeout(() => {
       navigate(ROUTES.DASHBOARD, { replace: true });
     }, 200);
   };
-
-  console.log('🎨 LoginPage: Renderizando tela de login');
 
   return (
     <Box
@@ -61,15 +49,15 @@ export const LoginPage = () => {
       }}
     >
       <Container maxWidth="lg">
-        <Box 
-          sx={{ 
-            display: 'flex', 
+        <Box
+          sx={{
+            display: 'flex',
             minHeight: '80vh',
             flexDirection: { xs: 'column', md: 'row' }
           }}
         >
           {/* Lado esquerdo - Informações */}
-          <Box 
+          <Box
             sx={{
               display: { xs: 'none', md: 'flex' },
               flex: 1,
@@ -90,27 +78,7 @@ export const LoginPage = () => {
             <Typography variant="h6" align="center" sx={{ opacity: 0.9, mb: 4 }}>
               Sistema de Gerenciamento de Usuários, Grupos e Permissões
             </Typography>
-            
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <Security sx={{ mr: 1 }} />
-              <Typography variant="body1">
-                Controle total de acesso
-              </Typography>
-            </Box>
-            
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <Security sx={{ mr: 1 }} />
-              <Typography variant="body1">
-                Multi-tenant
-              </Typography>
-            </Box>
-            
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Security sx={{ mr: 1 }} />
-              <Typography variant="body1">
-                Interface moderna e intuitiva
-              </Typography>
-            </Box>
+    
           </Box>
 
           {/* Lado direito - Formulário de login */}
@@ -131,14 +99,14 @@ export const LoginPage = () => {
               <Box sx={{ width: '100%', maxWidth: 400 }}>
                 <LoginForm onSuccess={handleLoginSuccess} />
               </Box>
-              
-              <Typography 
-                variant="caption" 
-                color="text.secondary" 
-                align="center" 
+
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                align="center"
                 sx={{ mt: 4 }}
               >
-                © 2025 Access Control System. Todos os direitos reservados.
+                © 2025 Samuel System. Todos os direitos reservados.
               </Typography>
             </Paper>
           </Box>
